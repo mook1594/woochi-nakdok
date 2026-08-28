@@ -3,7 +3,8 @@
 import argparse
 import sys
 
-from nakdok.analyze import InputError, read_book
+from nakdok.analyze import InputError, read_book, split_chapters
+from nakdok.config import chapter_patterns
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -32,9 +33,10 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "analyze":
         try:
-            read_book(args.book)
+            text = read_book(args.book)
         except (InputError, OSError) as e:
             print(e, file=sys.stderr)
             return 2
+        split_chapters(text, chapter_patterns(args.book))
     print(f"nakdok {args.command}: 아직 구현되지 않았다", file=sys.stderr)
     return 1

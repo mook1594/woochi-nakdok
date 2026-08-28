@@ -2,8 +2,9 @@
 
 import pytest
 
-from nakdok.analyze import InputError, read_book
+from nakdok.analyze import InputError, read_book, split_chapters
 from nakdok.cli import main
+from nakdok.config import DEFAULT_CHAPTER_PATTERNS
 
 TEXT = "제 1 장\n\n한글 테스트 문장이다. 원문은 변형되지 않는다.\n"
 
@@ -69,3 +70,72 @@ def test_empty_means_zero_characters(tmp_path):
 def test_cli_exits_1_when_decoding_succeeds(tmp_path):
     """디코딩에 성공하면 아직 미구현이므로 exit 1로 끝난다."""
     assert main(["analyze", str(write_book(tmp_path, TEXT.encode("utf-8")))]) == 1
+
+
+# --- T3 챕터 분할 (R2.1~R2.5) ---
+
+
+@pytest.mark.parametrize(
+    "heading", ["제 1 장", "제1화", "제 3 부", "3.", "12", "Chapter 4", "chapter 12"]
+)
+def test_default_patterns_match(heading):
+    """R2.2 — 기본 정규식 3종이 각각 매칭된다."""
+    chapters = split_chapters(f"앞머리\n{heading}\n본문\n", DEFAULT_CHAPTER_PATTERNS)
+    assert len(chapters) == 2
+
+
+def test_plain_line_is_not_a_boundary():
+    """경계가 아닌 줄에서는 나뉘지 않는다 — 위 테스트의 대조군."""
+    chapters = split_chapters("앞머리\n그냥 문장이다.\n본문\n", DEFAULT_CHAPTER_PATTERNS)
+    assert len(chapters) == 1
+
+
+def test_boundary_line_starts_its_chapter():
+    """경계 줄 자체는 그 챕터의 첫 줄로 들어간다."""
+    chapters = split_chapters("서문\n제 1 장\n본문\n", DEFAULT_CHAPTER_PATTERNS)
+    assert chapters[1].startswith("제 1 장")
+
+
+def test_no_boundary_makes_one_chapter_and_warns(capsys):
+    """R2.4 — 경계가 없으면 단일 챕터 + 경고."""
+    text = "경계가 없는 글이다.\n두 번째 줄이다.\n"
+    assert split_chapters(text, DEFAULT_CHAPTER_PATTERNS) == [text]
+    assert "경고" in capsys.readouterr().out
+
+
+def test_no_warning_when_boundary_found(capsys):
+    """R2.4 — 경계가 있으면 경고하지 않는다."""
+    split_chapters("제 1 장\n본문\n", DEFAULT_CHAPTER_PATTERNS)
+    assert "경고" not in capsys.readouterr().out
+
+
+def test_reports_chapter_count_and_sizes(capsys):
+    """R2.5 — 챕터 수와 각 챕터 문자 수를 표준 출력에 보고한다."""
+    chapters = split_chapters("제 1 장\n가나다\n제 2 장\n라마\n", DEFAULT_CHAPTER_PATTERNS)
+
+    out = capsys.readouterr().out
+    assert "챕터 2개" in out
+    for chapter in chapters:
+        assert f"{len(chapter)}자" in out
+
+
+def test_split_preserves_every_character():
+    """분할이 문자를 잃지 않는다 — CLAUDE.md 절대 규칙 1."""
+    text = "서문이다.\n\n제 1 장\n본문 하나.\n\n2.\n본문 둘.\nChapter 3\n끝."
+    chapters = split_chapters(text, DEFAULT_CHAPTER_PATTERNS)
+
+    assert len(chapters) == 4
+    assert chapters[0] == "서문이다.\n\n"  # 첫 경계 앞 텍스트가 버려지지 않는다
+    assert "".join(chapters) == text
+
+
+def test_config_pattern_is_used_by_split(tmp_path, capsys):
+    """R2.3 — config의 정규식이 실제 분할에 쓰인다 (CLI 경로)."""
+    nakdok_dir = tmp_path / ".nakdok"
+    nakdok_dir.mkdir()
+    (nakdok_dir / "config.yaml").write_text("chapter_pattern: '^### '\n", encoding="utf-8")
+
+    # 기본 정규식이라면 "제 1 장"에서 나뉘지만, config 정규식은 "### "에서만 나뉜다
+    book = write_book(tmp_path, "제 1 장\n본문\n### 진짜 경계\n뒷부분\n".encode("utf-8"))
+    assert main(["analyze", str(book)]) == 1
+    assert "챕터 2개" in capsys.readouterr().out
