@@ -12,7 +12,7 @@
 - **세그먼트(Segment)**: 화자가 동일한 연속 텍스트 구간. 내레이션 또는 하나의 대화문.
 - **매니페스트(Manifest)**: 청크 목록과 각 청크의 메타데이터를 담은 `.nakdok/manifest.json`. 파이프라인의 SSOT.
 - **텍스트 해시**: 청크의 정규화 후 문자열 + 보이스 + 속도를 결합해 계산한 SHA-256 값. 캐시 키로 쓴다.
-- **설정 파일(Config)**: 챕터 경계 정규식과 무음 정책을 사람이 정의한 `.nakdok/config.yaml`. 없으면 기본값을 사용한다.
+- **설정 파일(Config)**: 챕터 경계 정규식, 무음 정책, 단일 보이스 설정을 사람이 정의한 `.nakdok/config.yaml`. 없으면 기본값을 사용한다.
 - **치환 사전(Lexicon)**: 고유명사·한자어 등의 읽는 법을 사람이 정의한 `.nakdok/lexicon.yaml`.
 - **캐스팅 시트(Cast sheet)**: 화자별 보이스 배정과 수동 교정을 담은 `.nakdok/cast.yaml`.
 - **보이스**: Supertonic 내장 보이스 스타일 식별자. M1–M5, F1–F5 10종.
@@ -94,6 +94,8 @@
 4.3. THE SYSTEM SHALL 매니페스트의 `text` 필드에 원문 문자열을 변형 없이 기록한다.
 
 4.4. WHEN `analyze` 명령이 기존 매니페스트가 있는 상태에서 실행되면, THE SYSTEM SHALL 기존 청크 중 `text_hash`가 동일한 항목의 `audio_path`와 `duration_ms`를 보존한다.
+
+4.5. THE SYSTEM SHALL 각 청크의 `voice`와 `speed`를 `.nakdok/config.yaml`의 `voice`·`speed` 값으로 배정하고, 지정되지 않은 경우 기본값 `M3`과 `0.95`를 사용한다.
 
 ---
 

@@ -45,7 +45,7 @@ nakdok run <book.txt>       # analyze → synth → build
 <book>.txt
 <book>.m4b                  # 최종 산출물
 .nakdok/
-  config.yaml               # 챕터 정규식·무음 정책 (사람이 편집, 선택)
+  config.yaml               # 챕터 정규식·무음 정책·보이스 (사람이 편집, 선택)
   manifest.json             # 청크 목록 (SSOT)
   lexicon.yaml              # 치환 사전 (사람이 편집, Phase 2)
   cast.yaml                 # 캐스팅 시트 (사람이 편집, Phase 3)
