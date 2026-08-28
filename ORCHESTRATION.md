@@ -210,8 +210,10 @@ CLI는 `argparse`(표준 라이브러리)를 쓴다. `click`이 supertonic의 �
   - 문단 경계를 넘어 병합하지 않음 (R3.6)
   - `boundary_after` 4종 판정과 우선순위 `chapter` > `scene` > `paragraph` > `sentence` (R3.7)
   - 마지막 청크는 `chapter` (R3.8)
-- **먼저 할 것**: `architecture.md` D9에 따라 **테스트를 먼저 쓰고** kss를 붙여
-  통과 여부를 본다. 통과하면 kss 채택, 아니면 직접 구현. 순서를 뒤집지 않는다
+- **먼저 할 것**: `architecture.md` D9에 따라 **테스트를 먼저 쓰고** 그 테스트를
+  통과하는 최소한의 분할기를 직접 구현한다. 순서를 뒤집지 않는다
+- **새 의존성을 추가하지 않는다.** kss는 전이 의존성 25개(pyarrow·scipy·networkx…)
+  때문에 탈락했다 (D9). 표준 라이브러리 `re`로 끝낸다
 
 ### T5 — 매니페스트 생성 (R4.1~4.5, R10.1)
 
