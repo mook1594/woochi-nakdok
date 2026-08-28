@@ -119,6 +119,8 @@ nakdok run <book.txt>       # analyze → synth → build
 
 ## 참고 문서
 
+- `ORCHESTRATION.md` — **진행 상태 SSOT.** 작업 목록·완료 기준·에스컬레이션·검증 규칙
+- `docs/handoff.md` — 최신 세션 인수인계 (1개만 유지)
 - `docs/requirements.md` — EARS 요구사항 (구현 기준)
 - `docs/architecture.md` — 파이프라인 설계와 결정 근거
 - `docs/roadmap.md` — 단계별 계획과 종료 조건
