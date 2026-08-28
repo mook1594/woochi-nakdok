@@ -45,11 +45,16 @@ nakdok run <book.txt>       # analyze → synth → build
 <book>.txt
 <book>.m4b                  # 최종 산출물
 .nakdok/
+  config.yaml               # 챕터 정규식·무음 정책 (사람이 편집, 선택)
   manifest.json             # 청크 목록 (SSOT)
   lexicon.yaml              # 치환 사전 (사람이 편집, Phase 2)
   cast.yaml                 # 캐스팅 시트 (사람이 편집, Phase 3)
   audio/<sha256[:16]>.wav   # 청크별 합성 결과 캐시
 ```
+
+`config.yaml`은 없어도 된다 — 없으면 코드의 기본값을 쓴다. 값을 바꾸려면 사람이
+직접 만든다. `.nakdok/` 자체는 `analyze`가 만들므로, 첫 실행 전에 정규식을 바꾸려면
+디렉토리를 먼저 만들어야 한다.
 
 `manifest.json`이 파이프라인의 단일 진실 공급원(SSOT)이다. 각 청크는
 `{ id, chapter, order, boundary_after, text, text_hash, voice, speed, audio_path, duration_ms }`를
@@ -76,7 +81,8 @@ nakdok run <book.txt>       # analyze → synth → build
    이게 깨지면 문단 하나 고칠 때마다 책 전체를 다시 돌리게 된다.
 
 5. **무음 삽입은 코드가 담당한다.** TTS가 문단·장면 전환의 쉼을 만들어주지 않는다.
-   기본값은 `docs/architecture.md`의 무음 정책 표를 따르고, 설정으로 노출한다.
+   기본값은 `docs/architecture.md`의 무음 정책 표를 따르고, `.nakdok/config.yaml`로
+   노출한다.
 
 ## 하지 말 것
 

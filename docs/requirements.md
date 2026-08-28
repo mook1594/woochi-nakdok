@@ -12,10 +12,11 @@
 - **세그먼트(Segment)**: 화자가 동일한 연속 텍스트 구간. 내레이션 또는 하나의 대화문.
 - **매니페스트(Manifest)**: 청크 목록과 각 청크의 메타데이터를 담은 `.nakdok/manifest.json`. 파이프라인의 SSOT.
 - **텍스트 해시**: 청크의 정규화 후 문자열 + 보이스 + 속도를 결합해 계산한 SHA-256 값. 캐시 키로 쓴다.
+- **설정 파일(Config)**: 챕터 경계 정규식과 무음 정책을 사람이 정의한 `.nakdok/config.yaml`. 없으면 기본값을 사용한다.
 - **치환 사전(Lexicon)**: 고유명사·한자어 등의 읽는 법을 사람이 정의한 `.nakdok/lexicon.yaml`.
 - **캐스팅 시트(Cast sheet)**: 화자별 보이스 배정과 수동 교정을 담은 `.nakdok/cast.yaml`.
 - **보이스**: Supertonic 내장 보이스 스타일 식별자. M1–M5, F1–F5 10종.
-- **무음 정책**: 경계 종류(문장/문단/장면/챕터)별 삽입 무음 길이 설정.
+- **무음 정책**: 경계 종류(`sentence`/`paragraph`/`scene`/`chapter`)별 삽입 무음 길이 설정.
 - **미확정 화자(unknown)**: 화자 판별이 실패한 대화문에 부여하는 예약 화자명.
 
 ---
@@ -48,7 +49,7 @@
 
 2.2. THE SYSTEM SHALL 기본 챕터 경계 정규식으로 `제\s*\d+\s*[장화부]`, `^\d+\.?\s*$`, `^[Cc]hapter\s+\d+`를 사용한다.
 
-2.3. WHERE 설정 파일에 `chapter_pattern`이 지정된 경우, THE SYSTEM SHALL 기본 정규식 대신 지정된 정규식을 사용한다.
+2.3. WHERE `.nakdok/config.yaml`에 `chapter_pattern`이 지정된 경우, THE SYSTEM SHALL 기본 정규식 대신 지정된 정규식을 사용한다.
 
 2.4. IF 챕터 경계가 하나도 검출되지 않으면, THEN THE SYSTEM SHALL 전체 텍스트를 단일 챕터로 처리하고 경고를 출력한다.
 
@@ -128,7 +129,7 @@
 
 6.2. THE SYSTEM SHALL 기본 무음 길이로 `sentence` 400ms, `paragraph` 800ms, `scene` 1800ms, `chapter` 1000ms를 사용한다.
 
-6.3. WHERE 설정 파일에 무음 정책이 지정된 경우, THE SYSTEM SHALL 기본값 대신 지정된 값을 사용한다.
+6.3. WHERE `.nakdok/config.yaml`에 무음 정책이 지정된 경우, THE SYSTEM SHALL 기본값 대신 지정된 값을 사용한다.
 
 ---
 
