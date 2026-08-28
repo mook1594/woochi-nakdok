@@ -72,6 +72,31 @@ def test_cli_exits_1_when_decoding_succeeds(tmp_path):
     assert main(["analyze", str(write_book(tmp_path, TEXT.encode("utf-8")))]) == 1
 
 
+def test_missing_file_exits_2(tmp_path):
+    """R1.5 — 존재하지 않는 파일은 exit 2."""
+    assert main(["analyze", str(tmp_path / "없는파일.txt")]) == 2
+
+
+def test_missing_file_reports_cause(tmp_path, capsys):
+    """R1.5 — 실패 원인이 출력된다."""
+    missing = tmp_path / "없는파일.txt"
+    main(["analyze", str(missing)])
+
+    # OSError 메시지는 경로를 repr로 넣어 백슬래시가 이중이 된다. 파일명으로 본다.
+    err = capsys.readouterr().err
+    assert missing.name in err
+    assert "No such file" in err
+
+
+def test_unreadable_path_exits_2(tmp_path, capsys):
+    """R1.5 — 디렉토리처럼 읽을 수 없는 경로도 exit 2 + 원인 출력."""
+    directory = tmp_path / "책디렉토리"
+    directory.mkdir()
+
+    assert main(["analyze", str(directory)]) == 2
+    assert directory.name in capsys.readouterr().err
+
+
 # --- T3 챕터 분할 (R2.1~R2.5) ---
 
 
