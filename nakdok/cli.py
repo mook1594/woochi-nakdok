@@ -3,6 +3,8 @@
 import argparse
 import sys
 
+from nakdok.analyze import InputError, read_book
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -28,5 +30,11 @@ def main(argv: list[str] | None = None) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     args = build_parser().parse_args(argv)
+    if args.command == "analyze":
+        try:
+            read_book(args.book)
+        except (InputError, OSError) as e:
+            print(e, file=sys.stderr)
+            return 2
     print(f"nakdok {args.command}: 아직 구현되지 않았다", file=sys.stderr)
     return 1
