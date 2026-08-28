@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nakdok"
+version = "0.1.0"
+description = "한국어 txt 전자책을 로컬 TTS로 낭독해 m4b 오디오북으로 만드는 CLI"
+requires-python = ">=3.13"
+# pyyaml은 supertonic의 전이 의존성이지만 설정 로딩이 직접 쓰므로 명시 선언한다.
+dependencies = [
+    "supertonic",
+    "soundfile",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+nakdok = "nakdok.cli:main"
+
+[tool.setuptools]
+packages = ["nakdok"]

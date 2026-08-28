@@ -37,6 +37,8 @@
 
 1.4. IF 입력 파일의 문자 수가 0이면, THEN THE SYSTEM SHALL 종료 코드 2와 함께 중단한다.
 
+1.5. IF 입력 파일이 존재하지 않거나 읽을 수 없으면, THEN THE SYSTEM SHALL 종료 코드 2와 함께 실패 원인을 출력하고 중단한다.
+
 ---
 
 ### Requirement 2: 챕터 분할
