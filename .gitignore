@@ -1,0 +1,11 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# 작업 산출물 — .nakdok/은 책 파일 옆에 생기는 캐시이고 리포에 들어오지 않는다
+.nakdok/
+*.m4b
+*.wav
