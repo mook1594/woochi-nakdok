@@ -75,6 +75,5 @@ supertonic 1.3.1 휠을 직접 열어 본 결과다. 문서의 주장 중 틀린
 
 ## 다음 세션 첫 걸음
 
-```
-ORCHESTRATION.md 의 T1 임무서를 nakdok-implementer 에게 넘긴다.
-```
+1. `ORCHESTRATION.md`의 **세션 시작 절차**를 실행한다 — 특히 전제 감사
+2. T1 임무서를 `nakdok-implementer`에게 넘긴다
