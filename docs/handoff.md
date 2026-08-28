@@ -37,7 +37,7 @@ ca801e9 docs: 단일 보이스와 speed의 출처를 R4.5로 정의
 | 4 | 설정 파일 = **`.nakdok/config.yaml`**. 없으면 코드 기본값 | R2.3, R6.3 |
 | 5 | 단일 보이스·speed의 출처 = config, 기본값 **`M3` / `0.95`** (자리표시자) | R4.5 |
 | 6 | 한국어 문장 분할 라이브러리(kss)는 **미확정**. T4에서 테스트를 먼저 쓰고 판정 | `architecture.md` D9 |
-| 7 | CLI는 `argparse`. `click`은 supertonic의 전이 의존성이라 기대지 않는다 | `ORCHESTRATION.md` 모듈 배치 |
+| 7 | **전이 의존성에 기대지 않는다.** CLI는 `argparse`(= `click` 배제), `pyyaml`은 `pyproject.toml`에 직접 선언 | `ORCHESTRATION.md` T1 · 모듈 배치 |
 
 ## 실측으로 확인한 것
 

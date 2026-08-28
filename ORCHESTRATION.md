@@ -84,6 +84,24 @@
 
 ---
 
+## 환경 재현
+
+```
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install -e .
+.venv/Scripts/python.exe -m pip install pytest
+```
+
+T1이 `pyproject.toml`을 만들기 전까지는 두 번째 줄 대신 이걸 쓴다:
+
+```
+.venv/Scripts/python.exe -m pip install supertonic soundfile pyyaml pytest
+```
+
+**가상환경은 자동 활성화되지 않는다.** 항상 `.venv/Scripts/python.exe`로 부른다.
+한글을 출력하는 스크립트에는 `PYTHONIOENCODING=utf-8`을 붙인다 — 콘솔이 cp1252라
+안 붙이면 크래시한다.
+
 ## 모듈 배치
 
 작업 경계와 파일 경계를 일치시킨다. 서브에이전트에 "이 파일만"이라고 말할 수 있어야
@@ -123,6 +141,11 @@ CLI는 `argparse`(표준 라이브러리)를 쓴다. `click`이 supertonic의 �
 - **테스트**
   - 파서가 4개 서브커맨드를 등록했는지 (이름 집합 비교)
   - `analyze`가 인자 없이 호출되면 에러로 끝나는지
+- **주의**: `pyproject.toml`에 `supertonic` · `soundfile` · **`pyyaml`**을 직접
+  선언한다. 셋 다 이미 `.venv`에 깔려 있지만 `pyyaml`은 supertonic이 끌고 온
+  **전이 의존성**이다 — 선언하지 않으면 supertonic이 그걸 버리는 순간 설정 로딩이
+  조용히 깨진다. `click`을 안 쓰기로 한 것과 같은 이유다. `pytest`는 아직 설치돼
+  있지 않으므로 개발 의존성으로 선언하고 설치한다
 
 ### T2 — 인코딩 감지 (R1.1~1.4)
 
