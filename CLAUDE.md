@@ -52,7 +52,13 @@ nakdok run <book.txt>       # analyze → synth → build
 ```
 
 `manifest.json`이 파이프라인의 단일 진실 공급원(SSOT)이다. 각 청크는
-`{ id, chapter, order, text, text_hash, voice, speed, audio_path, duration_ms }`를 갖는다.
+`{ id, chapter, order, boundary_after, text, text_hash, voice, speed, audio_path, duration_ms }`를
+갖는다.
+
+`boundary_after`는 이 청크와 다음 청크 사이의 경계 종류(`sentence` `paragraph`
+`scene` `chapter`)다. 원문의 줄바꿈 구조는 `analyze`만 볼 수 있으므로, 여기에
+기록해 두지 않으면 `build`가 무음 길이를 고를 수 없다. 이 필드가 `build`를 원문
+파일로부터 독립시킨다.
 
 ## 절대 규칙
 

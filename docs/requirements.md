@@ -74,6 +74,10 @@
 
 3.6. THE SYSTEM SHALL 청크가 문단 경계를 넘어 병합되지 않도록 문단 경계에서 청크를 종료한다.
 
+3.7. WHEN 청크 분할이 완료되면, THE SYSTEM SHALL 각 청크와 다음 청크 사이의 경계를 다음 우선순위로 판정한다: 챕터가 바뀌면 `chapter`, 빈 줄이 2개 이상 연속되면 `scene`, 문단이 바뀌면 `paragraph`, 그 외에는 `sentence`.
+
+3.8. THE SYSTEM SHALL 전체 텍스트의 마지막 청크의 경계를 `chapter`로 판정한다.
+
 ---
 
 ### Requirement 4: 매니페스트 생성
@@ -84,7 +88,7 @@
 
 4.1. WHEN `analyze` 명령이 완료되면, THE SYSTEM SHALL `.nakdok/manifest.json`을 생성한다.
 
-4.2. THE SYSTEM SHALL 각 청크에 대해 `id`, `chapter`, `order`, `text`, `text_hash`, `voice`, `speed`, `audio_path`, `duration_ms` 필드를 매니페스트에 기록한다.
+4.2. THE SYSTEM SHALL 각 청크에 대해 `id`, `chapter`, `order`, `boundary_after`, `text`, `text_hash`, `voice`, `speed`, `audio_path`, `duration_ms` 필드를 매니페스트에 기록한다.
 
 4.3. THE SYSTEM SHALL 매니페스트의 `text` 필드에 원문 문자열을 변형 없이 기록한다.
 
@@ -120,13 +124,11 @@
 
 **Acceptance criteria:**
 
-6.1. WHEN `build` 명령이 실행되면, THE SYSTEM SHALL 인접한 청크 사이에 경계 종류에 따른 무음을 삽입한다.
+6.1. WHEN `build` 명령이 실행되면, THE SYSTEM SHALL 인접한 두 청크 사이에 앞 청크의 `boundary_after`에 대응하는 무음을 삽입한다.
 
-6.2. THE SYSTEM SHALL 기본 무음 길이로 문장 경계 400ms, 문단 경계 800ms, 장면 경계 1800ms, 챕터 시작 전 1000ms를 사용한다.
+6.2. THE SYSTEM SHALL 기본 무음 길이로 `sentence` 400ms, `paragraph` 800ms, `scene` 1800ms, `chapter` 1000ms를 사용한다.
 
-6.3. THE SYSTEM SHALL 빈 줄 2개 이상이 연속된 지점을 장면 경계로 판정한다.
-
-6.4. WHERE 설정 파일에 무음 정책이 지정된 경우, THE SYSTEM SHALL 기본값 대신 지정된 값을 사용한다.
+6.3. WHERE 설정 파일에 무음 정책이 지정된 경우, THE SYSTEM SHALL 기본값 대신 지정된 값을 사용한다.
 
 ---
 
