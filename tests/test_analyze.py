@@ -2,7 +2,7 @@
 
 import pytest
 
-from nakdok.analyze import InputError, read_book, split_chapters
+from nakdok.analyze import InputError, _split_sentences, read_book, split_chapters, split_chunks
 from nakdok.cli import main
 from nakdok.config import DEFAULT_CHAPTER_PATTERNS
 
@@ -67,9 +67,9 @@ def test_empty_means_zero_characters(tmp_path):
     assert read_book(write_book(tmp_path, " \n".encode("utf-8"))) == " \n"
 
 
-def test_cli_exits_1_when_decoding_succeeds(tmp_path):
-    """디코딩에 성공하면 아직 미구현이므로 exit 1로 끝난다."""
-    assert main(["analyze", str(write_book(tmp_path, TEXT.encode("utf-8")))]) == 1
+def test_cli_exits_0_when_decoding_succeeds(tmp_path):
+    """디코딩에 성공하면 analyze가 끝까지 진행해 exit 0으로 끝난다 (T5부터)."""
+    assert main(["analyze", str(write_book(tmp_path, TEXT.encode("utf-8")))]) == 0
 
 
 def test_missing_file_exits_2(tmp_path):
@@ -162,5 +162,161 @@ def test_config_pattern_is_used_by_split(tmp_path, capsys):
 
     # 기본 정규식이라면 "제 1 장"에서 나뉘지만, config 정규식은 "### "에서만 나뉜다
     book = write_book(tmp_path, "제 1 장\n본문\n### 진짜 경계\n뒷부분\n".encode("utf-8"))
-    assert main(["analyze", str(book)]) == 1
+    assert main(["analyze", str(book)]) == 0
     assert "챕터 2개" in capsys.readouterr().out
+
+
+# --- T4 청크 분할 (R3.1~R3.8) ---
+
+
+def test_splits_at_sentence_boundary():
+    """R3.1 — 누적 길이가 120자를 넘기면 문장 경계에서 정확히 갈라진다."""
+    sentence_a = "가" * 80 + "."  # 81자
+    sentence_b = "나" * 80 + "."  # 81자
+    text = sentence_a + sentence_b + "\n"
+
+    (chunks,) = split_chunks([text])
+
+    assert len(chunks) == 2
+    assert chunks[0]["text"] == sentence_a
+    assert chunks[1]["text"] == sentence_b + "\n"
+    assert chunks[0]["boundary_after"] == "sentence"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '그가 "안녕하세요. 반갑습니다."라고 말했다.\n',
+        "그가 '안녕하세요. 반갑습니다.'라고 말했다.\n",
+        "그가 「안녕하세요. 반갑습니다.」라고 말했다.\n",
+    ],
+)
+def test_quote_internal_period_is_not_a_boundary(text):
+    """R3.2 — 따옴표(", ', 「」) 내부의 마침표는 문장 경계가 아니다.
+
+    분할 계층(`_split_sentences`)을 직접 본다. 청크 개수만 보면 병합 단계가
+    120자 이하 문장들을 도로 합쳐버려서, 내부 마침표에서 잘못 갈라져도
+    청크 수가 똑같이 나와 버그가 가려진다.
+    """
+    assert len(_split_sentences(text)) == 2  # 실제 경계 1개(마지막 마침표) + 꼬리 개행
+
+    (chunks,) = split_chunks([text])
+    assert len(chunks) == 1
+    assert chunks[0]["text"] == text
+
+
+@pytest.mark.parametrize("text", ["몰라... 진짜야.\n", "몰라… 진짜야.\n"])
+def test_ellipsis_is_not_a_boundary(text):
+    """R3.3 — 줄임표(…, ...)는 문장 경계가 아니다. 분할 계층을 직접 본다(위 R3.2와 같은 이유)."""
+    assert len(_split_sentences(text)) == 2  # 실제 경계 1개(마지막 마침표) + 꼬리 개행
+
+    (chunks,) = split_chunks([text])
+    assert len(chunks) == 1
+    assert chunks[0]["text"] == text
+
+
+def test_merges_sentences_under_120_chars():
+    """R3.4 — 연속된 문장을 누적 120자 이하로 하나의 청크에 묶는다."""
+    sentence = "다" * 29 + "."  # 30자 × 3 = 90자, 120 이하
+    text = sentence * 3 + "\n"
+
+    (chunks,) = split_chunks([text])
+
+    assert len(chunks) == 1
+    assert chunks[0]["text"] == text
+
+
+def test_oversized_sentence_is_its_own_chunk():
+    """R3.5 — 120자를 초과하는 단일 문장은 단독 청크가 된다."""
+    long_sentence = "라" * 150 + "."  # 151자
+    short_sentence = "마" + "."
+    text = long_sentence + short_sentence + "\n"
+
+    (chunks,) = split_chunks([text])
+
+    assert len(chunks) == 2
+    assert chunks[0]["text"] == long_sentence
+    assert len(chunks[0]["text"]) > 120
+    assert chunks[1]["text"] == short_sentence + "\n"
+
+
+def test_chunk_does_not_merge_across_paragraph_boundary():
+    """R3.6 — 청크가 문단 경계를 넘어 병합되지 않는다. 합쳐도 120자 이하지만 나뉜다."""
+    text = "안녕.\n\n반가워.\n"
+
+    (chunks,) = split_chunks([text])
+
+    assert len(chunks) == 2
+    assert chunks[0]["boundary_after"] == "paragraph"
+
+
+def test_paragraph_boundary_at_exactly_one_blank_line():
+    """R3.7 경계값 — 빈 줄 1개는 paragraph다."""
+    text = "하나.\n\n둘.\n"
+
+    (chunks,) = split_chunks([text])
+
+    assert chunks[0]["boundary_after"] == "paragraph"
+
+
+def test_scene_boundary_at_exactly_two_blank_lines():
+    """R3.7 경계값 — 빈 줄 2개(그 이상)는 scene이다."""
+    text = "하나.\n\n\n둘.\n"
+
+    (chunks,) = split_chunks([text])
+
+    assert chunks[0]["boundary_after"] == "scene"
+
+
+def test_chapter_boundary_overrides_scene():
+    """R3.7 우선순위 — 챕터 끝에 빈 줄 2개가 와도(scene 조건) 챕터 전환이 우선한다."""
+    chapter1 = "안녕.\n\n\n"  # 뒤에 빈 줄만 있고 다음 문단이 없다 — scene처럼 보인다
+    chapter2 = "반가워.\n"
+
+    chunks1, chunks2 = split_chunks([chapter1, chapter2])
+
+    assert chunks1[-1]["boundary_after"] == "chapter"  # scene이 아니다
+    assert "".join(c["text"] for c in chunks1) == chapter1  # 빈 줄도 잃지 않는다
+
+
+def test_last_chunk_of_entire_text_is_chapter():
+    """R3.8 — 전체 텍스트의 마지막 청크는 chapter다."""
+    chunks1, chunks2 = split_chunks(["첫 챕터.\n", "마지막 챕터.\n"])
+
+    assert chunks2[-1]["boundary_after"] == "chapter"
+
+
+@pytest.mark.parametrize("blank_chapter", ["\n\n", "   \n"])
+def test_all_blank_chapter_preserves_characters(blank_chapter):
+    """절대 규칙 1 — 챕터 전체가 빈 줄(또는 공백만 있는 줄)이어도 문자를 잃지 않는다.
+
+    내용 청크가 하나도 없으면 그 챕터의 청크 목록에는 붙일 곳이 없다.
+    그래도 원문 문자는 청크 하나로 남는다.
+    """
+    chapters = [blank_chapter, "제 1 장\n본문이다.\n"]
+
+    result = split_chunks(chapters)
+
+    assert "".join(c["text"] for chapter_chunks in result for c in chapter_chunks) == "".join(
+        chapters
+    )
+    assert result[0] == [{"text": blank_chapter, "boundary_after": "chapter"}]
+
+
+def test_chunk_split_preserves_every_character():
+    """분할이 문자를 잃지 않는다 — CLAUDE.md 절대 규칙 1. 경계 4종을 함께 확인한다."""
+    text = (
+        "첫 문단이다. 계속된다.\n두 번째 줄도 첫 문단.\n"
+        "\n"
+        "둘째 문단.\n"
+        "\n\n"
+        "셋째 문단, 장면 전환 후.\n"
+    )
+
+    (chunks,) = split_chunks([text])
+
+    assert len(chunks) == 3
+    assert chunks[0]["boundary_after"] == "paragraph"
+    assert chunks[1]["boundary_after"] == "scene"
+    assert chunks[2]["boundary_after"] == "chapter"
+    assert "".join(c["text"] for c in chunks) == text

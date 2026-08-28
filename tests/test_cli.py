@@ -41,10 +41,16 @@ def test_synth_and_build_take_no_args():
     assert parser.parse_args(["build"]).command == "build"
 
 
-@pytest.mark.parametrize(
-    "argv",
-    [["analyze", "book.txt"], ["synth"], ["build"], ["run", "book.txt"]],
-)
+@pytest.mark.parametrize("argv", [["synth"], ["build"], ["run", "book.txt"]])
 def test_every_command_exits_nonzero(argv):
-    """아직 구현되지 않았으므로 모든 명령이 0이 아닌 코드를 반환한다."""
+    """analyze는 T5에서 구현됐으므로 뺀다 — synth/build/run은 아직 미구현이라 0이 아니다."""
     assert main(argv) != 0
+
+
+def test_analyze_succeeds_and_writes_manifest(tmp_path):
+    """R4.1 — analyze가 완료되면 exit 0과 함께 `.nakdok/manifest.json`을 만든다."""
+    book = tmp_path / "book.txt"
+    book.write_text("제 1 장\n한 문장이다.\n", encoding="utf-8")
+
+    assert main(["analyze", str(book)]) == 0
+    assert (tmp_path / ".nakdok" / "manifest.json").exists()
