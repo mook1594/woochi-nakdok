@@ -67,9 +67,9 @@ def test_empty_means_zero_characters(tmp_path):
     assert read_book(write_book(tmp_path, " \n".encode("utf-8"))) == " \n"
 
 
-def test_cli_exits_1_when_decoding_succeeds(tmp_path):
-    """디코딩에 성공하면 아직 미구현이므로 exit 1로 끝난다."""
-    assert main(["analyze", str(write_book(tmp_path, TEXT.encode("utf-8")))]) == 1
+def test_cli_exits_0_when_decoding_succeeds(tmp_path):
+    """디코딩에 성공하면 analyze가 끝까지 진행해 exit 0으로 끝난다 (T5부터)."""
+    assert main(["analyze", str(write_book(tmp_path, TEXT.encode("utf-8")))]) == 0
 
 
 def test_missing_file_exits_2(tmp_path):
@@ -162,7 +162,7 @@ def test_config_pattern_is_used_by_split(tmp_path, capsys):
 
     # 기본 정규식이라면 "제 1 장"에서 나뉘지만, config 정규식은 "### "에서만 나뉜다
     book = write_book(tmp_path, "제 1 장\n본문\n### 진짜 경계\n뒷부분\n".encode("utf-8"))
-    assert main(["analyze", str(book)]) == 1
+    assert main(["analyze", str(book)]) == 0
     assert "챕터 2개" in capsys.readouterr().out
 
 

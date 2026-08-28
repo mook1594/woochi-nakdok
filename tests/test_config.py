@@ -1,6 +1,12 @@
-"""T3 — 설정 로딩 테스트 (R2.3)."""
+"""T3 — 설정 로딩 테스트 (R2.3). T5 — voice/speed 로딩 테스트 (R4.5)."""
 
-from nakdok.config import DEFAULT_CHAPTER_PATTERNS, chapter_patterns
+from nakdok.config import (
+    DEFAULT_CHAPTER_PATTERNS,
+    DEFAULT_SPEED,
+    DEFAULT_VOICE,
+    chapter_patterns,
+    voice_and_speed,
+)
 
 
 def write_config(book_path, body: str):
@@ -59,3 +65,16 @@ def test_config_beside_cwd_is_ignored(tmp_path, monkeypatch):
     monkeypatch.chdir(cwd)
 
     assert chapter_patterns(book_dir / "book.txt") == DEFAULT_CHAPTER_PATTERNS
+
+
+def test_voice_and_speed_default_when_no_config(tmp_path):
+    """R4.5 — config.yaml이 없으면 기본값 M3/0.95를 쓴다."""
+    assert voice_and_speed(tmp_path / "book.txt") == (DEFAULT_VOICE, DEFAULT_SPEED)
+
+
+def test_voice_and_speed_from_config(tmp_path):
+    """R4.5 — config.yaml에 voice/speed가 있으면 그 값을 쓴다."""
+    book = tmp_path / "book.txt"
+    write_config(book, "voice: F2\nspeed: 1.1\n")
+
+    assert voice_and_speed(book) == ("F2", 1.1)

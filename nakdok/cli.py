@@ -3,8 +3,9 @@
 import argparse
 import sys
 
-from nakdok.analyze import InputError, read_book, split_chapters
-from nakdok.config import chapter_patterns
+from nakdok.analyze import InputError, read_book, split_chapters, split_chunks
+from nakdok.config import chapter_patterns, voice_and_speed
+from nakdok.manifest import build_manifest, load_manifest, save_manifest
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,6 +38,11 @@ def main(argv: list[str] | None = None) -> int:
         except (InputError, OSError) as e:
             print(e, file=sys.stderr)
             return 2
-        split_chapters(text, chapter_patterns(args.book))
+        chapters = split_chapters(text, chapter_patterns(args.book))
+        chunks = split_chunks(chapters)
+        voice, speed = voice_and_speed(args.book)
+        manifest = build_manifest(chunks, voice, speed, existing=load_manifest(args.book))
+        save_manifest(args.book, manifest)  # R4.1
+        return 0
     print(f"nakdok {args.command}: 아직 구현되지 않았다", file=sys.stderr)
     return 1
